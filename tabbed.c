@@ -49,7 +49,7 @@
 
 enum { ColFG, ColBG, ColLast };       /* color */
 enum { WMProtocols, WMDelete, WMName, WMState, WMFullscreen,
-       XEmbed, WMSelectTab, WMLast }; /* default atoms */
+       XEmbed, WMSelectTab, WMPid, WMLast }; /* default atoms */
 
 typedef union {
 	int i;
@@ -160,6 +160,7 @@ static Bool running = True, nextfocus, doinitspawn = True,
 static Display *dpy;
 static DC dc;
 static Atom wmatom[WMLast];
+static pid_t mainpid;
 static Window root, win;
 static Client **clients;
 static int nclients, sel = -1, lastsel = -1;
@@ -1008,6 +1009,9 @@ setup(void)
 	wmatom[WMState] = XInternAtom(dpy, "_NET_WM_STATE", False);
 	wmatom[XEmbed] = XInternAtom(dpy, "_XEMBED", False);
 
+	wmatom[WMPid] = XInternAtom(dpy, "_NET_WM_PID", False);
+  mainpid = getpid();
+
 	/* init appearance */
 	wx = 0;
 	wy = 0;
@@ -1317,6 +1321,9 @@ xsettitle(Window w, const char *str)
 		XSetTextProperty(dpy, w, &xtp, XA_WM_NAME);
 		XFree(xtp.value);
 	}
+
+  XChangeProperty(dpy, win, wmatom[WMPid], XA_CARDINAL, 32,
+      PropModeReplace, (unsigned char *)&mainpid, 1);
 }
 
 void
